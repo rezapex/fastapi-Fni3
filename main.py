@@ -88,6 +88,9 @@ async def get_transcript(video_url: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/fish-audio")
+async def fish_audio():
+    return {"message": "Welcome to fish-audio endpoint!"}
 @app.get("/transcript-formatted/{video_url:path}")
 async def get_formatted_transcript(video_url: str):
     try:
