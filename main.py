@@ -45,17 +45,37 @@ async def get_transcript(video_url: str):
         video_id = extract_video_id(video_url)
         transcript = YouTubeTranscriptApi.get_transcript(video_id)
         
-        # Clean and format transcript
-        formatted_transcript = [
-            {
-                "text": " ".join(entry["text"].split()),  # Remove extra spaces and newlines
-                "start": entry["start"],
-                "duration": entry["duration"]
-            }
-            for entry in transcript
-        ]
+        # Clean and combine transcript segments
+        cleaned_transcript = []
+        current_text = ""
+        current_start = 0
+        current_duration = 0
         
-        return {"transcript": formatted_transcript}
+        for entry in transcript:
+            text = " ".join(entry["text"].split())  # Clean extra spaces
+            
+            # If text ends with sentence-ending punctuation or is the last entry
+            if text.rstrip().endswith(('.', '!', '?')) or entry == transcript[-1]:
+                current_text += " " + text
+                current_duration += entry["duration"]
+                
+                cleaned_transcript.append({
+                    "text": current_text.strip(),
+                    "start": current_start,
+                    "duration": current_duration
+                })
+                
+                # Reset for next sentence
+                current_text = ""
+                current_duration = 0
+                current_start = entry["start"] + entry["duration"]
+            else:
+                if not current_text:  # If starting a new segment
+                    current_start = entry["start"]
+                current_text += " " + text
+                current_duration += entry["duration"]
+        
+        return {"transcript": cleaned_transcript}
     
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
