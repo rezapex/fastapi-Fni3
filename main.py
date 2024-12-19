@@ -42,16 +42,13 @@ async def root():
 @app.get("/transcript/{video_url:path}")
 async def get_transcript(video_url: str):
     try:
-        # Extract video ID from URL or use as is
         video_id = extract_video_id(video_url)
-        
-        # Get transcript
         transcript = YouTubeTranscriptApi.get_transcript(video_id)
         
-        # Format transcript for better readability (optional)
+        # Clean and format transcript
         formatted_transcript = [
             {
-                "text": entry["text"],
+                "text": " ".join(entry["text"].split()),  # Remove extra spaces and newlines
                 "start": entry["start"],
                 "duration": entry["duration"]
             }
